@@ -1,10 +1,16 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import { MessageSquare, Facebook, Send, User } from "lucide-react";
+import { io, Socket } from "socket.io-client"; // Import the required type
 
-// Define types for users and chats
+// Define the props interface for ChatWindow
+interface ChatWindowProps {
+  whatsappSocket: Socket; // Type the `whatsappSocket` prop as `Socket`
+}
+
+// Mock data types
 type UserType = {
   id: number;
   name: string;
@@ -58,7 +64,8 @@ const mockChats: Record<number, ChatType[]> = {
   ],
 };
 
-export default function ChatWindow() {
+// Update ChatWindow to accept props
+const ChatWindow: React.FC<ChatWindowProps> = ({ whatsappSocket }) => {
   const [selectedPlatform, setSelectedPlatform] = useState<
     "whatsapp" | "facebook"
   >("whatsapp");
@@ -67,11 +74,25 @@ export default function ChatWindow() {
 
   const handleSendMessage = () => {
     if (message.trim() && activeChat) {
-      // In a real app, you'd send the message to a backend here
-      console.log(`Sending message to ${activeChat}: ${message}`);
+      whatsappSocket.emit("sendMessageToRoom", {
+        chatId: activeChat,
+        content: message,
+      });
       setMessage("");
     }
   };
+
+  const joinRoom = (id: Number) => {
+    console.log("Inside Join room function");
+    console.log("user ID: ", id);
+    whatsappSocket.emit("registerRoom", id);
+  };
+
+  useEffect(() => {
+    mockUsers[selectedPlatform]?.forEach((user) => {
+      joinRoom(user.id);
+    });
+  }, [selectedPlatform]);
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -104,7 +125,9 @@ export default function ChatWindow() {
               key={user.id}
               variant="ghost"
               className="w-full justify-start px-4 py-2 hover:bg-gray-100"
-              onClick={() => setActiveChat(user.id)}
+              onClick={() => {
+                setActiveChat(user.id);
+              }}
             >
               <User className="h-6 w-6 mr-2" />
               <div className="text-left">
@@ -174,4 +197,6 @@ export default function ChatWindow() {
       </div>
     </div>
   );
-}
+};
+
+export default ChatWindow;

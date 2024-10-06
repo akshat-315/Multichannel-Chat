@@ -1,15 +1,12 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
 import ChatWindow from "./components/ChatWindow";
+import { io, Socket } from "socket.io-client";
 
 function App() {
-  const [count, setCount] = useState(0);
+  let whatsappSocket: Socket = io("http://localhost:3000/whatsapp");
 
   return (
     <>
-      <ChatWindow />
+      <ChatWindow whatsappSocket={whatsappSocket} />
     </>
   );
 }
